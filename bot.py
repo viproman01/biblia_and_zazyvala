@@ -286,15 +286,31 @@ async def start_health_server():
 
 async def main():
     """Главная функция запуска"""
-    await db.init_db()
-    logger.info("🚀 Бот-зазывала (Эмодзи-версия) запущен!")
-    
-    # Запускаем сервер для проверки здоровья (нужно для Render)
-    if os.getenv("RENDER"):
-        await start_health_server()
-        
     try:
-        await dp.start_polling(bot)
+        await db.init_db()
+        logger.info("🚀 Бот-зазывала (Эмодзи-версия) запущен!")
+        
+        # Запускаем сервер для проверки здоровья (нужно для Render/HF)
+        if os.getenv("RENDER"):
+            await start_health_server()
+            
+        retry_count = 0
+        max_retries = 10
+        
+        while retry_count < max_retries:
+            try:
+                logger.info(f"Начинаем polling... (Попытка {retry_count + 1}/{max_retries})")
+                await dp.start_polling(bot, skip_updates=True)
+                break
+            except Exception as e:
+                retry_count += 1
+                logger.error(f" Ошибка подключения: {e}")
+                if retry_count < max_retries:
+                    wait_time = min(retry_count * 5, 60)
+                    logger.info(f"Повтор через {wait_time} сек...")
+                    await asyncio.sleep(wait_time)
+                else:
+                    logger.critical("❌ Не удалось подключиться к Telegram после 10 попыток.")
     finally:
         await bot.session.close()
         logger.info("Бот остановлен")
