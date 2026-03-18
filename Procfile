@@ -1,1 +1,1 @@
-web: python bot.py
+web: python merged_bot/main.py
