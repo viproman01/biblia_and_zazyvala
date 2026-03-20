@@ -1,8 +1,12 @@
+from dotenv import load_dotenv
+
+# Загружаем переменные окружения ПЕРВЫМ делом
+load_dotenv()
+
 import asyncio
 import logging
 import os
 import sys
-from dotenv import load_dotenv
 from aiohttp import web
 
 # Добавляем пути к ботам
@@ -66,7 +70,7 @@ async def run_biblia():
 
 async def main():
     """Главная функция запуска обоих ботов"""
-    load_dotenv()
+    # load_dotenv() - уже вызван вверху
     
     logger.info("🤖 Запуск объединенного сервера ботов...")
     
