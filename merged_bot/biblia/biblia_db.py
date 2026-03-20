@@ -150,7 +150,9 @@ class ChristianBotDB:
                     }
                 return None
         except Exception as e:
-            logger.error(f"Ошибка при получении случайной цитаты Biblia: {e}")
+            logger.error(f"Ошибка при получении случайной цитаты Biblia (is_postgres={self.is_postgres}): {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return None
 
     def add_quote(self, text: str, book: str, chapter: int, verse: str) -> bool:
