@@ -297,22 +297,41 @@ class ChristianBot:
         elif query.data == "admin_stats":
             await self.show_admin_stats(query, context)
     
-    async def send_random_quote(self, chat_id: int, context: ContextTypes.DEFAULT_TYPE):
+    async def send_random_quote(self, chat_id: int, context=None):
         """Отправить случайную цитату в чат"""
-        quote_data = self.db.get_random_quote()
-        
-        if quote_data:
-            formatted_quote = self.db.format_quote(quote_data)
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=formatted_quote,
-                parse_mode=ParseMode.MARKDOWN
-            )
-        else:
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text="😔 Извините, не удалось получить цитату. Попробуйте позже."
-            )
+        try:
+            # Получаем объект бота из контекста или напрямую
+            bot = context.bot if hasattr(context, 'bot') else context
+            if bot is None:
+                bot = self.application.bot
+
+            quote_data = self.db.get_random_quote()
+            
+            if quote_data:
+                formatted_quote = self.db.format_quote(quote_data)
+                try:
+                    # Пытаемся отправить с Markdown
+                    await bot.send_message(
+                        chat_id=chat_id,
+                        text=formatted_quote,
+                        parse_mode=ParseMode.MARKDOWN
+                    )
+                except Exception as e:
+                    logger.warning(f"Ошибка Markdown, отправляем обычным текстом: {e}")
+                    # Если Markdown не прошел, отправляем обычным текстом
+                    await bot.send_message(
+                        chat_id=chat_id,
+                        text=formatted_quote.replace("*", "").replace("_", "")
+                    )
+            else:
+                await bot.send_message(
+                    chat_id=chat_id,
+                    text="😔 Извините, не удалось получить цитату из базы данных."
+                )
+        except Exception as e:
+            logger.error(f"Критическая ошибка в send_random_quote: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
     
     async def show_admin_stats(self, query, context: ContextTypes.DEFAULT_TYPE):
         """Показать статистику администратору"""
@@ -417,6 +436,7 @@ class ChristianBot:
         """Отправить цитаты в список чатов"""
         for chat_id in chat_ids:
             try:
+                # Передаем сам объект бота в качестве контекста
                 await self.send_random_quote(chat_id, self.application.bot)
                 await asyncio.sleep(1)  # Небольшая задержка между отправками
             except Exception as e:
