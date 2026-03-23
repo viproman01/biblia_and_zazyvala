@@ -37,9 +37,12 @@ async def start_health_server():
     runner = web.AppRunner(app)
     await runner.setup()
     port = int(os.getenv("PORT", 8080))
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
-    logger.info(f"Health server started on port {port}")
+    try:
+        site = web.TCPSite(runner, "0.0.0.0", port)
+        await site.start()
+        logger.info(f"✅ Health server started on PORT: {port}")
+    except Exception as e:
+        logger.error(f"❌ Failed to start health server on port {port}: {e}")
 
 async def run_biblia():
     """Запуск Христианского бота"""
@@ -87,6 +90,7 @@ async def main():
         asyncio.create_task(run_biblia())                      # Biblia bot
     ]
     
+    logger.info("📡 Поллинг запущен для обоих ботов. Ожидаем сообщения...")
     await asyncio.gather(*tasks)
 
 if __name__ == "__main__":
