@@ -299,8 +299,8 @@ async def main(run_health=True):
         
         while retry_count < max_retries:
             try:
-                logger.info(f"Начинаем polling... (Попытка {retry_count + 1}/{max_retries})")
-                await dp.start_polling(bot, skip_updates=True)
+                logger.info("🚀 Начинаем polling Зазывалы... (handle_signals=False)")
+                await dp.start_polling(bot, skip_updates=True, handle_signals=False)
                 break
             except Exception as e:
                 retry_count += 1

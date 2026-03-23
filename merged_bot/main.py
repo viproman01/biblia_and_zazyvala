@@ -61,6 +61,7 @@ async def run_biblia():
         await bot.application.initialize()
         await bot.application.start()
         await bot.application.updater.start_polling(drop_pending_updates=True)
+        logger.info("🚀 Поллинг Biblia_Bot запущен!")
         
         # Держим задачу запущенной
         while True:
