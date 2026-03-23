@@ -47,30 +47,32 @@ async def start_health_server():
 async def run_biblia():
     """Запуск Христианского бота"""
     try:
-        # Получаем токен из переменных окружения для Biblia_Bot
-        # Важно: на Render добавим BIBLIA_BOT_TOKEN
         token = os.getenv("BIBLIA_BOT_TOKEN")
         if not token:
-            logger.error("BIBLIA_BOT_TOKEN не найден!")
+            logger.error("❌ BIBLIA_BOT_TOKEN не найден!")
             return
 
+        logger.info("🔧 Инициализация ChristianBot...")
         bot = ChristianBot()
-        # Переопределяем токен, если он пришел из окружения
+        
+        # Переопределяем токен
         bot.application = bot.application.builder().token(token).build()
         bot.setup_handlers()
         
-        logger.info("Запуск Biblia_Bot...")
-        # Используем метод initialize/start вместо run_polling (который блокирует)
+        logger.info("🚀 Запуск Biblia_Bot.start()...")
         await bot.application.initialize()
         await bot.application.start()
-        await bot.application.updater.start_polling(drop_pending_updates=True)
-        logger.info("🚀 Поллинг Biblia_Bot запущен!")
         
-        # Держим задачу запущенной
+        logger.info("📡 Biblia_Bot: запускаем polling...")
+        await bot.application.updater.start_polling(drop_pending_updates=True)
+        logger.info("✅ Biblia_Bot: ПОЛЛИНГ ЗАПУЩЕН!")
+        
         while True:
             await asyncio.sleep(3600)
     except Exception as e:
-        logger.error(f"Ошибка в Biblia_Bot: {e}")
+        logger.error(f"❌ Ошибка в Biblia_Bot: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
 
 async def main():
     """Главная функция запуска обоих ботов"""
