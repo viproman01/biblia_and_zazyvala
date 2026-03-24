@@ -66,9 +66,10 @@ async def run_biblia():
         logger.info("📡 Biblia_Bot: запускаем polling...")
         await bot.application.updater.start_polling(drop_pending_updates=True)
         logger.info("✅ Biblia_Bot: ПОЛЛИНГ ЗАПУЩЕН!")
-        
+        # Держим задачу запущенной и пишем пульс
         while True:
-            await asyncio.sleep(3600)
+            await asyncio.sleep(600)  # Раз в 10 минут
+            logger.info("💓 Biblia_Bot Heartbeat: Поллинг активен...")
     except Exception as e:
         logger.error(f"❌ Ошибка в Biblia_Bot: {e}")
         import traceback
