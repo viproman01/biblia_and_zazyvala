@@ -9,9 +9,16 @@ logger = logging.getLogger(__name__)
 
 class ChristianBotDB:
     def __init__(self):
-        self.db_url = os.getenv('BIBLIA_DATABASE_URL')
+        # Пробуем BIBLIA_DATABASE_URL, если нет - берем общую DATABASE_URL
+        self.db_url = os.getenv('BIBLIA_DATABASE_URL') or os.getenv('DATABASE_URL')
         self.db_path = DATABASE_PATH
         self.is_postgres = self.db_url and self.db_url.startswith('postgres')
+        
+        if self.is_postgres:
+            logger.info("📡 Biblia_DB: Используем PostgreSQL")
+        else:
+            logger.info(f"📁 Biblia_DB: Используем SQLite ({self.db_path})")
+            
         self.init_database()
     
     def get_connection(self):
