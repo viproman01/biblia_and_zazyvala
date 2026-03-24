@@ -77,9 +77,14 @@ async def run_biblia():
 
 async def main():
     """Главная функция запуска обоих ботов"""
-    # load_dotenv() - уже вызван вверху
-    
     logger.info("🤖 Запуск объединенного сервера ботов...")
+    
+    # Диагностика переменных (безопасно)
+    logger.info(f"📝 Проверка конфигурации:")
+    logger.info(f"   - BOT_TOKEN: {'✅ задан' if os.getenv('BOT_TOKEN') else '❌ ОТСУТСТВУЕТ'}")
+    logger.info(f"   - BIBLIA_BOT_TOKEN: {'✅ задан' if os.getenv('BIBLIA_BOT_TOKEN') else '❌ ОТСУТСТВУЕТ'}")
+    logger.info(f"   - DATABASE_URL: {'✅ задана' if os.getenv('DATABASE_URL') else '❌ ОТСУТСТВУЕТ'}")
+    logger.info(f"   - PORT: {os.getenv('PORT')}")
     
     # Запускаем сервер здоровья
     await start_health_server()
