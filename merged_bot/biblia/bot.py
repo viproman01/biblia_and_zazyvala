@@ -64,7 +64,7 @@ class ChristianBot:
     async def log_all_messages(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Логирование любого текстового сообщения для проверки связи"""
         user = update.effective_user
-        logger.info(f"✨ Biblia_Bot: Получено сообщение от {user.id} ({user.first_name}): {update.message.text[:50]}")
+        logger.info(f"✨ Библия_Бот: Получено сообщение от {user.id} ({user.first_name}): {update.message.text[:50]}")
     
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик команды /start"""

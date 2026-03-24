@@ -69,9 +69,9 @@ async def run_biblia():
         # Держим задачу запущенной и пишем пульс
         while True:
             await asyncio.sleep(600)  # Раз в 10 минут
-            logger.info("💓 Biblia_Bot Heartbeat: Поллинг активен...")
+            logger.info("💓 Библия_Бот: Поллинг активен...")
     except Exception as e:
-        logger.error(f"❌ Ошибка в Biblia_Bot: {e}")
+        logger.error(f"❌ Ошибка в Библия_Бот: {e}")
         import traceback
         logger.error(traceback.format_exc())
 
@@ -89,8 +89,8 @@ async def main():
     # (поэтому в его коде стоит проверка if os.getenv("RENDER"))
     
     tasks = [
-        asyncio.create_task(start_zazyvala(run_health=False)), # Zazyvala bot
-        asyncio.create_task(run_biblia())                      # Biblia bot
+        asyncio.create_task(start_zazyvala(run_health=False)), # Бот Зазывала
+        asyncio.create_task(run_biblia())                      # Бот Библия
     ]
     
     logger.info("📡 Поллинг запущен для обоих ботов. Ожидаем сообщения...")
