@@ -49,23 +49,29 @@ async def run_biblia():
     try:
         token = os.getenv("BIBLIA_BOT_TOKEN")
         if not token:
-            logger.error("❌ BIBLIA_BOT_TOKEN не найден!")
+            logger.error("❌ Ошибка: BIBLIA_BOT_TOKEN не найден в окружении!")
             return
-
-        logger.info("🔧 Инициализация ChristianBot...")
-        bot = ChristianBot()
         
-        # Переопределяем токен
+        token = token.strip()
+        logger.info(f"🔧 Инициализация Biblia_Bot (токен начинается на {token[:5]}...)")
+        
+        bot = ChristianBot()
+        # Инициализируем приложение ПРАВИЛЬНО с новым токеном
         bot.application = bot.application.builder().token(token).build()
+        # Сначала сбрасываем старые обработчики, если они были
         bot.setup_handlers()
         
+        # Добавляем ловушку для всех сообщений (отладка)
+        from telegram.ext import MessageHandler, filters
+        async def debug_catcher(update, context):
+            logger.info(f"📩 Biblia_Bot ПОЛУЧИЛ: {update.effective_message.text if update.effective_message else 'не текст'}")
+        bot.application.add_handler(MessageHandler(filters.ALL, debug_catcher), group=-1)
+
         logger.info("🚀 Запуск Biblia_Bot.start()...")
         await bot.application.initialize()
         await bot.application.start()
-        
-        logger.info("📡 Biblia_Bot: запускаем polling...")
         await bot.application.updater.start_polling(drop_pending_updates=True)
-        logger.info("✅ Biblia_Bot: ПОЛЛИНГ ЗАПУЩЕН!")
+        logger.info("✅ Biblia_Bot: ПОЛЛИНГ УСПЕШНО ЗАПУЩЕН!")
         # Держим задачу запущенной и пишем пульс
         while True:
             await asyncio.sleep(600)  # Раз в 10 минут
