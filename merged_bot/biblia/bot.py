@@ -416,41 +416,42 @@ class ChristianBot:
             self.db.remove_chat(chat_id)
             logger.info(f"Бот удален из чата {chat_id}")
     
-    def schedule_daily_quotes(self):
+    def setup_jobs(self):
         """Настройка ежедневной отправки цитат"""
-        schedule.every().day.at(DAILY_QUOTE_TIME).do(self.send_daily_quotes)
+        import datetime
+        import pytz
         
-        def run_scheduler():
-            while True:
-                schedule.run_pending()
-                time.sleep(60)  # Проверяем каждую минуту
-        
-        scheduler_thread = Thread(target=run_scheduler, daemon=True)
-        scheduler_thread.start()
-        logger.info(f"Планировщик запущен. Время отправки: {DAILY_QUOTE_TIME}")
-    
-    def send_daily_quotes(self):
-        """Отправка ежедневных цитат во все активные чаты"""
+        job_queue = self.application.job_queue
+        if not job_queue:
+            logger.error("❌ JobQueue не инициализирован. Планировщик не будет работать!")
+            return
+            
+        try:
+            time_parts = DAILY_QUOTE_TIME.split(':')
+            tz = pytz.timezone('Europe/Moscow')
+            t = datetime.time(hour=int(time_parts[0]), minute=int(time_parts[1]), tzinfo=tz)
+            
+            job_queue.run_daily(self._send_daily_quotes_job, time=t)
+            logger.info(f"⌚️ Планировщик цитат ptb запущен на {DAILY_QUOTE_TIME} (МСК)")
+        except Exception as e:
+            logger.error(f"❌ Ошибка при настройке планировщика: {e}")
+            
+    async def _send_daily_quotes_job(self, context: ContextTypes.DEFAULT_TYPE):
+        """Рассылка цитат по расписанию через JobQueue"""
         active_chats = self.db.get_active_chats()
         
         if not active_chats:
             logger.info("Нет активных чатов для отправки цитат")
             return
+            
+        logger.info(f"Отправка ежедневных цитат в {len(active_chats)} чатов по расписанию")
         
-        logger.info(f"Отправка ежедневных цитат в {len(active_chats)} чатов")
-        
-        # Используем asyncio для отправки сообщений
-        asyncio.create_task(self._send_quotes_to_chats(active_chats))
-    
-    async def _send_quotes_to_chats(self, chat_ids: list):
-        """Отправить цитаты в список чатов"""
-        for chat_id in chat_ids:
+        for chat_id in active_chats:
             try:
-                # Передаем сам объект бота в качестве контекста
-                await self.send_random_quote(chat_id, self.application.bot)
-                await asyncio.sleep(1)  # Небольшая задержка между отправками
+                await self.send_random_quote(chat_id, context.bot)
+                await asyncio.sleep(1)  # Небольшая задержка "анти-спам"
             except Exception as e:
-                logger.error(f"Ошибка при отправке цитаты в чат {chat_id}: {e}")
+                logger.error(f"Ошибка при отправке расписания в {chat_id}: {e}")
     
     async def stats_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Команда для просмотра статистики (только для админа)"""
@@ -535,7 +536,7 @@ class ChristianBot:
         logger.info("Запуск Христианского бота...")
         
         # Запускаем планировщик
-        self.schedule_daily_quotes()
+        self.setup_jobs()
         
         # Запускаем бота
         logger.info("Бот готов к работе!")

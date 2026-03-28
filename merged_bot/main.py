@@ -60,6 +60,7 @@ async def run_biblia():
         bot.application = bot.application.builder().token(token).build()
         # Сначала сбрасываем старые обработчики, если они были
         bot.setup_handlers()
+        bot.setup_jobs()
         
         # Добавляем ловушку для всех сообщений (отладка)
         from telegram.ext import MessageHandler, filters

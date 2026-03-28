@@ -6,12 +6,12 @@ from dotenv import load_dotenv
 # Загружаем переменные
 load_dotenv()
 
-SQLITE_PATH = 'biblia/simple_bible_bot.db'
-POSTGRES_URL = os.getenv('BIBLIA_DATABASE_URL')
+SQLITE_PATH = 'merged_bot/biblia/simple_bible_bot.db'
+POSTGRES_URL = os.getenv('BIBLIA_DATABASE_URL') or os.getenv('DATABASE_URL')
 
 def migrate():
     if not POSTGRES_URL:
-        print("❌ Ошибка: BIBLIA_DATABASE_URL не установлена!")
+        print("❌ Ошибка: DATABASE_URL не установлена!")
         return
 
     print("🚀 Начинаем миграцию из SQLite в PostgreSQL...")
