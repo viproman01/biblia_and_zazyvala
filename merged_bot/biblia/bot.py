@@ -9,7 +9,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 from telegram.constants import ParseMode
 
 from .biblia_db import ChristianBotDB
-from .biblia_config import BOT_TOKEN, ADMIN_ID, DAILY_QUOTE_TIME
+from .biblia_config import BOT_TOKEN, ADMIN_ID, DAILY_QUOTE_TIME, DAILY_QUOTE_TIMES
 
 # Настройка логирования
 logging.basicConfig(
@@ -427,12 +427,22 @@ class ChristianBot:
             return
             
         try:
-            time_parts = DAILY_QUOTE_TIME.split(':')
+            try:
+                time_parts_list = [t.strip() for t in DAILY_QUOTE_TIMES]
+            except NameError:
+                time_parts_list = [DAILY_QUOTE_TIME]
             tz = pytz.timezone('Europe/Moscow')
-            t = datetime.time(hour=int(time_parts[0]), minute=int(time_parts[1]), tzinfo=tz)
             
-            job_queue.run_daily(self._send_daily_quotes_job, time=t)
-            logger.info(f"⌚️ Планировщик цитат ptb запущен на {DAILY_QUOTE_TIME} (МСК)")
+            for time_str in time_parts_list:
+                try:
+                    parts = time_str.split(':')
+                    t = datetime.time(hour=int(parts[0]), minute=int(parts[1]), tzinfo=tz)
+                    job_queue.run_daily(self._send_daily_quotes_job, time=t)
+                    logger.info(f"⌚️ Планировщик цитат ptb запущен на {time_str} (МСК)")
+                except Exception as ex:
+                    logger.error(f"Не удалось распарсить время {time_str}: {ex}")
+                    
+            logger.info("✅ Планировщик полностью настроен.")
         except Exception as e:
             logger.error(f"❌ Ошибка при настройке планировщика: {e}")
             
