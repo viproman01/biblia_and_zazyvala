@@ -1,15 +1,5 @@
-from database import SimpleBibleBotDB
-import logging
-
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
-
-def add_initial_quotes():
-    """Добавить начальные библейские цитаты в базу данных"""
-    db = SimpleBibleBotDB()
-    
-    # Расширенный набор христианских цитат из Библии
-    quotes = [
+# Данные библейских цитат (text, book, chapter, verse)
+INITIAL_QUOTES = [
         # Евангелие от Иоанна
         ("Ибо так возлюбил Бог мир, что отдал Сына Своего Единородного, дабы всякий верующий в Него, не погиб, но имел жизнь вечную.", "Иоанна", 3, "16"),
         ("Я есмь путь и истина и жизнь; никто не приходит к Отцу, как только через Меня.", "Иоанна", 14, "6"),
@@ -163,23 +153,4 @@ def add_initial_quotes():
         ("Ибо нет ничего тайного, что не сделалось бы явным.", "Луки", 8, "17"),
         ("Но Бог Свою любовь к нам доказывает тем, что Христос умер за нас, когда мы были еще грешниками.", "Римлянам", 5, "8"),
         ("Жизнь христианина — это путь веры.", "2-е Коринфянам", 5, "7")
-    ]
-    
-    success_count = 0
-    total_count = len(quotes)
-    
-    print(f"Начинаю загрузку {total_count} библейских цитат...")
-    
-    for text, book, chapter, verse in quotes:
-        if db.add_quote(text, book, chapter, verse):
-            success_count += 1
-            print(f"✅ Добавлена цитата из {book} {chapter}:{verse}")
-        else:
-            print(f"❌ Ошибка при добавлении цитаты из {book} {chapter}:{verse}")
-    
-    print(f"\n🎉 Загрузка завершена! Успешно добавлено {success_count} из {total_count} цитат.")
-    
-    return success_count == total_count
-
-if __name__ == "__main__":
-    add_initial_quotes()
+]

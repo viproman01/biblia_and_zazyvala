@@ -1,9 +1,6 @@
 import asyncio
 import logging
-import schedule
-import time
 from datetime import datetime
-from threading import Thread
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 from telegram.constants import ParseMode

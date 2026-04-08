@@ -3,7 +3,8 @@ import logging
 import os
 import psycopg2
 from psycopg2.extras import DictCursor
-from .biblia_config import DATABASE_PATH
+from .biblia_config import DATABASE_PATH, PERSISTENT_CHATS
+from .bible_quotes import INITIAL_QUOTES
 
 logger = logging.getLogger(__name__)
 
@@ -77,10 +78,35 @@ class ChristianBotDB:
                 
                 conn.commit()
                 logger.info("База данных Biblia инициализирована успешно")
-                
+
         except Exception as e:
             logger.error(f"Ошибка при инициализации базы данных Biblia: {e}")
+
+        self.load_initial_quotes()
+        self.ensure_persistent_chats()
     
+    def load_initial_quotes(self):
+        """Загрузить начальные цитаты, если таблица пуста"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                table = "biblia_quotes" if self.is_postgres else "quotes"
+                cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                count = cursor.fetchone()[0]
+                if count > 0:
+                    logger.info(f"📖 В базе уже есть {count} цитат, пропускаем загрузку")
+                    return
+                placeholder = "%s" if self.is_postgres else "?"
+                for text, book, chapter, verse in INITIAL_QUOTES:
+                    cursor.execute(
+                        f"INSERT INTO {table} (text, book, chapter, verse) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder})",
+                        (text, book, chapter, verse)
+                    )
+                conn.commit()
+                logger.info(f"✅ Загружено {len(INITIAL_QUOTES)} начальных цитат в БД")
+        except Exception as e:
+            logger.error(f"Ошибка при загрузке начальных цитат: {e}")
+
     def add_chat(self, chat_id: int, chat_title: str) -> bool:
         """Добавить чат в базу данных"""
         try:
@@ -179,17 +205,45 @@ class ChristianBotDB:
             logger.error(f"Ошибка при добавлении цитаты Biblia: {e}")
             return False
     
+    def ensure_persistent_chats(self):
+        """Добавить PERSISTENT_CHATS в БД, если их там ещё нет"""
+        if not PERSISTENT_CHATS:
+            return
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                table = "biblia_chats" if self.is_postgres else "chats"
+                for chat_id in PERSISTENT_CHATS:
+                    if self.is_postgres:
+                        cursor.execute(
+                            f"INSERT INTO {table} (chat_id, chat_title) VALUES (%s, %s) ON CONFLICT (chat_id) DO NOTHING",
+                            (chat_id, f"Persistent #{chat_id}")
+                        )
+                    else:
+                        cursor.execute(
+                            f"INSERT OR IGNORE INTO {table} (chat_id, chat_title) VALUES (?, ?)",
+                            (chat_id, f"Persistent #{chat_id}")
+                        )
+                conn.commit()
+                logger.info(f"✅ Persistent чаты ({len(PERSISTENT_CHATS)} шт.) синхронизированы с БД")
+        except Exception as e:
+            logger.error(f"Ошибка при добавлении persistent чатов: {e}")
+
     def get_active_chats(self):
-        """Получить все активные чаты (где включена рассылка)"""
+        """Получить все активные чаты (где включена рассылка) + PERSISTENT_CHATS"""
+        db_chats = []
         try:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 table = "biblia_chats" if self.is_postgres else "chats"
                 cursor.execute(f"SELECT chat_id FROM {table} WHERE is_enabled = TRUE")
-                return [row[0] for row in cursor.fetchall()]
+                db_chats = [row[0] for row in cursor.fetchall()]
         except Exception as e:
             logger.error(f"Ошибка при получении чатов Biblia: {e}")
-            return []
+        # Гарантируем, что PERSISTENT_CHATS всегда включены
+        all_chats = set(db_chats)
+        all_chats.update(PERSISTENT_CHATS)
+        return list(all_chats)
 
     def get_all_quotes(self):
         """Получить все цитаты"""

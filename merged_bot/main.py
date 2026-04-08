@@ -16,6 +16,7 @@ sys.path.append(os.path.dirname(__file__))
 try:
     from zazyvala.bot import main as start_zazyvala
     from biblia.bot import ChristianBot
+    from telegram.ext import Application
 except ImportError as e:
     print(f"Ошибка импорта: {e}")
     sys.exit(1)
@@ -56,23 +57,17 @@ async def run_biblia():
         logger.info(f"🔧 Инициализация Biblia_Bot (токен начинается на {token[:5]}...)")
         
         bot = ChristianBot()
-        # Инициализируем приложение ПРАВИЛЬНО с новым токеном
-        bot.application = bot.application.builder().token(token).build()
-        # Сначала сбрасываем старые обработчики, если они были
+        # Инициализируем приложение с правильным токеном
+        bot.application = Application.builder().token(token).build()
         bot.setup_handlers()
-        bot.setup_jobs()
-        
-        # Добавляем ловушку для всех сообщений (отладка)
-        from telegram.ext import MessageHandler, filters
-        async def debug_catcher(update, context):
-            logger.info(f"📩 Biblia_Bot ПОЛУЧИЛ: {update.effective_message.text if update.effective_message else 'не текст'}")
-        bot.application.add_handler(MessageHandler(filters.ALL, debug_catcher), group=-1)
 
-        logger.info("🚀 Запуск Biblia_Bot.start()...")
+        logger.info("🚀 Запуск Biblia_Bot...")
         await bot.application.initialize()
         await bot.application.start()
+        # Настраиваем расписание ПОСЛЕ старта (JobQueue уже работает)
+        bot.setup_jobs()
         await bot.application.updater.start_polling(drop_pending_updates=True)
-        logger.info("✅ Biblia_Bot: ПОЛЛИНГ УСПЕШНО ЗАПУЩЕН!")
+        logger.info("✅ Biblia_Bot: поллинг и планировщик запущены!")
         # Держим задачу запущенной и пишем пульс
         while True:
             await asyncio.sleep(600)  # Раз в 10 минут
