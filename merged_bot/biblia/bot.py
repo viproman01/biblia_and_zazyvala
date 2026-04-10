@@ -416,7 +416,7 @@ class ChristianBot:
     def setup_jobs(self):
         """Настройка ежедневной отправки цитат"""
         import datetime
-        import pytz
+        from zoneinfo import ZoneInfo
         
         job_queue = self.application.job_queue
         if not job_queue:
@@ -428,7 +428,7 @@ class ChristianBot:
                 time_parts_list = [t.strip() for t in DAILY_QUOTE_TIMES]
             except NameError:
                 time_parts_list = [DAILY_QUOTE_TIME]
-            tz = pytz.timezone('Europe/Moscow')
+            tz = ZoneInfo('Europe/Moscow')
             
             for time_str in time_parts_list:
                 try:
